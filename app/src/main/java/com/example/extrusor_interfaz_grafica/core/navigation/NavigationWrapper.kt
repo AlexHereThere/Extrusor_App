@@ -8,16 +8,17 @@ import androidx.navigation.toRoute
 import com.example.extrusor_interfaz_grafica.DetailScreen
 import com.example.extrusor_interfaz_grafica.LoginScreen
 import com.example.extrusor_interfaz_grafica.HomeScreen
+import com.example.extrusor_interfaz_grafica.BluetoothViewModel
 
 @Composable
-fun NavigationWrapper() {
+fun NavigationWrapper(viewModel: BluetoothViewModel) {
     val navController = rememberNavController()
     NavHost(navController = navController , startDestination = Login){
         composable<Login> {
-            LoginScreen{ navController.navigate(Home)}
+            LoginScreen(viewModel){navController.navigate(Home)}
         }
         composable<Home> {
-            HomeScreen{name -> navController.navigate(Detail(texto = name ))}
+            HomeScreen(viewModel){name -> navController.navigate(Detail(texto = name ))}
         }
         composable<Detail> { backStackEntry->
             var detail = backStackEntry.toRoute<Detail>()

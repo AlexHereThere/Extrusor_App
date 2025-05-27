@@ -17,7 +17,7 @@ import com.example.extrusor_interfaz_grafica.componentes.NavBar
 import com.example.extrusor_interfaz_grafica.componentes.TopBar
 
 @Composable
-fun HomeScreen(navigationToDetail :(String) -> Unit) {
+fun HomeScreen(viewModel: BluetoothViewModel,navigationToDetail :(String) -> Unit) {
     var text by remember { mutableStateOf("") }
 
     Column(
@@ -25,7 +25,7 @@ fun HomeScreen(navigationToDetail :(String) -> Unit) {
             .fillMaxSize()
             .padding(top = 50.dp),
         horizontalAlignment = Alignment.CenterHorizontally) {
-        TopBar()
+        TopBar(viewModel,navigationToDetail)
         /*
             Contenido Epico
          */
@@ -36,7 +36,7 @@ fun HomeScreen(navigationToDetail :(String) -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Bottom
     )
-    {NavBar()  }
+    {NavBar()}
 
 
     }
