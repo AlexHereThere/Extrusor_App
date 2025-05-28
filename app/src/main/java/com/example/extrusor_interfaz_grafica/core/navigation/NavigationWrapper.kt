@@ -9,20 +9,21 @@ import com.example.extrusor_interfaz_grafica.DetailScreen
 import com.example.extrusor_interfaz_grafica.LoginScreen
 import com.example.extrusor_interfaz_grafica.HomeScreen
 import com.example.extrusor_interfaz_grafica.WaitingScreen
+import com.example.extrusor_interfaz_grafica.BluetoothViewModel
 
 @Composable
-fun NavigationWrapper() {
+fun NavigationWrapper(viewModel: BluetoothViewModel) {
     val navController = rememberNavController()
     NavHost(navController = navController , startDestination = Login){
         composable<Login> {
-            LoginScreen( navigateToHome = { navController.navigate(Home)}, navigateToLogin = {
+            LoginScreen( viewModel = viewModel, navigateToHome = { navController.navigate(Home)}, navigateToLogin = {
                 navController.navigate(Login){
                     popUpTo<Login>{inclusive = true}
                 }
             })
         }
         composable<Home> {
-            HomeScreen(navigateToWaiting = {navController.navigate(Waiting)}, navigateToLogin = {                navController.navigate(Login){
+            HomeScreen(viewModel = viewModel, navigateToWaiting = {navController.navigate(Waiting)}, navigateToLogin = {                navController.navigate(Login){
                 popUpTo<Login>{inclusive = true}
             }})
         }

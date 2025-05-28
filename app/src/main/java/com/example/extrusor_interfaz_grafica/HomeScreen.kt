@@ -28,16 +28,17 @@ import com.example.extrusor_interfaz_grafica.componentes.TopBar
 import java.time.temporal.Temporal
 
 @Composable
-fun HomeScreen(navigateToWaiting :() -> Unit,navigateToLogin :() -> Unit ) {
+fun HomeScreen(viewModel: BluetoothViewModel,navigateToWaiting :() -> Unit,navigateToLogin :() -> Unit) {
     var text by remember { mutableStateOf("") }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 50.dp),
         horizontalAlignment = Alignment.CenterHorizontally) {
-        TopBar(true, navigationToLogin ={navigateToLogin()})
-
+        TopBar(true, viewModel = viewModel, navigationToLogin = {navigateToLogin()})
+        /*
+            Contenido Epico
+         */
         Formulario{navigateToWaiting()}
 
     }
