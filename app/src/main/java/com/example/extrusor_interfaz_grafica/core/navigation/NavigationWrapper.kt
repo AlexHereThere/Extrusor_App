@@ -8,16 +8,28 @@ import androidx.navigation.toRoute
 import com.example.extrusor_interfaz_grafica.DetailScreen
 import com.example.extrusor_interfaz_grafica.LoginScreen
 import com.example.extrusor_interfaz_grafica.HomeScreen
+import com.example.extrusor_interfaz_grafica.WaitingScreen
 
 @Composable
 fun NavigationWrapper() {
     val navController = rememberNavController()
     NavHost(navController = navController , startDestination = Login){
         composable<Login> {
-            LoginScreen{ navController.navigate(Home)}
+            LoginScreen( navigateToHome = { navController.navigate(Home)}, navigateToLogin = {
+                navController.navigate(Login){
+                    popUpTo<Login>{inclusive = true}
+                }
+            })
         }
         composable<Home> {
-            HomeScreen{name -> navController.navigate(Detail(texto = name ))}
+            HomeScreen(navigateToWaiting = {navController.navigate(Waiting)}, navigateToLogin = {                navController.navigate(Login){
+                popUpTo<Login>{inclusive = true}
+            }})
+        }
+        composable<Waiting> {
+            WaitingScreen{navController.navigate(Login){
+                popUpTo<Login>{inclusive = true}
+            } }
         }
         composable<Detail> { backStackEntry->
             var detail = backStackEntry.toRoute<Detail>()

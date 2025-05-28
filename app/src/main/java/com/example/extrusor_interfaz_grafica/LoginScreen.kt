@@ -20,12 +20,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.extrusor_interfaz_grafica.componentes.TopBar
+import com.example.extrusor_interfaz_grafica.core.navigation.Login
 import com.example.extrusor_interfaz_grafica.ui.theme.azulito
 import com.example.extrusor_interfaz_grafica.popUp.Conectando
 
 //No sera realmente un login sera lo del bluetooh, estoy haciendo un tutorial pues
 @Composable
-fun LoginScreen(navigateToHome: () -> Unit) {
+fun LoginScreen(navigateToHome: () -> Unit,navigateToLogin: () -> Unit) {
     var popUp = remember { mutableStateOf(false) }
     Conectando(showPopup = popUp.value, onDismiss = {
         popUp.value = false //Para que se cierre
@@ -37,7 +38,7 @@ fun LoginScreen(navigateToHome: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,) {
         //Debe haber un if si no hay nada entoces poner un "NO hay nada :c "
         //Y si si hya pues se muestra, tambien debe tener como una barra superior, la barra superior no estoy seguro de que debe de tener
-        TopBar()
+        TopBar(false, navigationToLogin ={navigateToLogin()})
         if(obtenerLista().isEmpty()){
             Text("No hay bluetooth cercanos :c", fontSize = 60.sp, lineHeight = 50.sp, modifier = Modifier.padding(5.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
 

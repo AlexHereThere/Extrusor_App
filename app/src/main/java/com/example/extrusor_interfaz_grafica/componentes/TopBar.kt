@@ -19,8 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
-@Preview
-fun TopBar() {
+fun TopBar( mostrarSalida : Boolean, navigationToLogin :() -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -37,20 +36,22 @@ fun TopBar() {
             }) {
 
         Spacer(modifier = Modifier.height(2.dp))
+        if(mostrarSalida){
         Button(
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Transparent
             ),
-            onClick = {},
+            onClick = {navigationToLogin()},
             modifier = Modifier.background(Color.Transparent)
         ) {
 
             Image(
-                painter = painterResource(id = com.example.extrusor_interfaz_grafica.R.drawable.exit_to_app_64dp_000000_fill0_wght400_grad0_opsz48),
+                painter = painterResource(id = com.example.extrusor_interfaz_grafica.R.drawable.salidanegro),
                 contentDescription = "Logo",
                 modifier = Modifier.size(64.dp)
 
             )
+}
         }
     }
 }
