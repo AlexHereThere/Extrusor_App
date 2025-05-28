@@ -28,10 +28,14 @@ fun NavigationWrapper(viewModel: BluetoothViewModel) {
             }})
         }
         composable<Waiting> {
-            WaitingScreen{navController.navigate(Login){
-                popUpTo<Login>{inclusive = true}
-            } }
-        }
+            WaitingScreen(viewModel=viewModel, navigateToLogin = {
+                navController.navigate(Login) {
+                    popUpTo<Login> { inclusive = true }
+                }
+            }
+            )
+
+            }
         composable<Detail> { backStackEntry->
             var detail = backStackEntry.toRoute<Detail>()
             DetailScreen(detail.texto){navController.navigate(Login){

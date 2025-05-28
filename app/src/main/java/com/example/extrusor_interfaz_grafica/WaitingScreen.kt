@@ -28,7 +28,7 @@ import com.example.extrusor_interfaz_grafica.componentes.TopBar
 import java.time.temporal.Temporal
 
 @Composable
-fun WaitingScreen(navigateToLogin :() -> Unit) {
+fun WaitingScreen(viewModel: BluetoothViewModel,navigateToLogin :() -> Unit) {
     var text by remember { mutableStateOf("") }
 
     Column(
@@ -36,7 +36,7 @@ fun WaitingScreen(navigateToLogin :() -> Unit) {
             .fillMaxSize()
             .padding(top = 50.dp),
         horizontalAlignment = Alignment.CenterHorizontally) {
-        TopBar(true, navigationToLogin = {navigateToLogin()})
+        TopBar(true, viewModel=viewModel,navigationToLogin = {navigateToLogin()})
         Text("Filamento siendo extraido")
         imprimirResultados()
 
