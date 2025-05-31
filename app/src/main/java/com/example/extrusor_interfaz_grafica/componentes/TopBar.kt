@@ -17,51 +17,46 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.extrusor_interfaz_grafica.BluetoothViewModel
 
 @Composable
-fun TopBar(
-    viewModel: BluetoothViewModel,
-    navigationToDetail: ((String) -> Unit)?
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp)
-            .drawBehind {
-                val strokeWidth = 2.dp.toPx()
-                val y = size.height - strokeWidth / 2
-                drawLine(
-                    color = Color.Black,
-                    start = Offset(0f, y),
-                    end = Offset(size.width, y),
-                    strokeWidth = 2.dp.toPx()
-                )
-            }) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Absolute.SpaceBetween
-        ) {
-            Spacer(modifier = Modifier.height(2.dp))
-            Button(
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
-                onClick = {
-                    viewModel.disconnect()
-                    navigationToDetail?.invoke("Login")
-                          },
-                modifier = Modifier.background(Color.Transparent)
-            ) {
-                Image(
-                    painter = painterResource(id = com.example.extrusor_interfaz_grafica.R.drawable.bluetooth_discconect),
-                    contentDescription = "Logo",
-                    modifier = Modifier.size(72.dp)
+fun TopBar( mostrarSalida : Boolean, navigationToLogin :() -> Unit,viewModel: BluetoothViewModel) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp)
+                .drawBehind {
+                    val strokeWidth = 2.dp.toPx()
+                    val y = size.height - strokeWidth / 2
+                    drawLine(
+                        color = Color.Black,
+                        start = Offset(0f, y),
+                        end = Offset(size.width, y),
+                        strokeWidth = 2.dp.toPx()
+                    )
+                }) {
 
-                )
-            }
             Spacer(modifier = Modifier.height(2.dp))
+            if(mostrarSalida){
+                Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent
+                    ),
+                    onClick = {
+                        viewModel.disconnect()
+                        navigationToLogin()
+                    },
+                    modifier = Modifier.background(Color.Transparent)
+                ) {
+                    Image(
+                        painter = painterResource(id = com.example.extrusor_interfaz_grafica.R.drawable.bluetooth_discconect),
+                        contentDescription = "Logo",
+                        modifier = Modifier.size(72.dp)
+
+                    )
+                }
+            }
         }
     }
-}
