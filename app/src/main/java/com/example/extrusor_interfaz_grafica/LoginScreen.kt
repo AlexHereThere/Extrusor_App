@@ -37,6 +37,7 @@ import com.example.extrusor_interfaz_grafica.ui.theme.azulito
 @SuppressLint("MissingPermission")
 @Composable
 fun LoginScreen(viewModel: BluetoothViewModel, navigateToHome: () -> Unit,navigateToLogin: () -> Unit) {
+    viewModel.disconnect() //desconectarse para poder conectarse de nuevo.
     var pairedDevices = viewModel.pairedDevices
     var popUp = remember { mutableStateOf(false) }
     Conectando(showPopup = popUp.value, onDismiss = {
@@ -56,23 +57,23 @@ fun LoginScreen(viewModel: BluetoothViewModel, navigateToHome: () -> Unit,naviga
             ListaDeBluetooh(
                 listaDeBluetooth = pairedDevices,
                 navigateToHome = { dispositivo ->
-                    viewModel.connectToDevice(
-                        dispositivo,
-                        onSuccess = {
+                    //viewModel.connectToDevice(
+                       // dispositivo,
+                        //onSuccess = {
                             popUp.value = true
                             navigateToHome()
-                        },
-                        onFailure = { e ->
-                           Log.e("Bluetooth", "No se pudo conectar: ${e.message}")
-                            // Puedes mostrar un Toast o un mensaje de error aquí
-                        }
-                    )
+                        //},
+                        //onFailure = { e ->
+                        //   Log.e("Bluetooth", "No se pudo conectar: ${e.message}")
+                        //    // Puedes mostrar un Toast o un mensaje de error aquí
+                        //}
+                    //)
                 }
             )
         }
             Button(
                 onClick = { viewModel.loadPaired() },//buscar mas dispositivos
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().padding(32.dp)
 
             ) { Text("Buscar") }
     }
@@ -114,7 +115,7 @@ private fun ListaDeBluetooh(listaDeBluetooth: MutableState<Set<BluetoothDevice>>
     LazyColumn(
         contentPadding = androidx.compose.foundation.layout.PaddingValues(30.dp),
         verticalArrangement = Arrangement.spacedBy(30.dp),
-        modifier = Modifier.fillMaxHeight(0.9F)
+        modifier = Modifier.fillMaxHeight(0.85F)
     ) {
         items(listaDeBluetooth.value.toList()) { dispositivo ->
             BloqueDeBluetooth(dispositivo, tamano, navigateToHome = {navigateToHome(dispositivo)})
