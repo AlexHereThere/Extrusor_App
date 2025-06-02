@@ -32,7 +32,7 @@ fun NavigationWrapper(viewModel: BluetoothViewModel) {
                 navController.navigate(Login) {
                     popUpTo<Login> { inclusive = true }
                 }
-            }g
+            }
             )
 
             }
