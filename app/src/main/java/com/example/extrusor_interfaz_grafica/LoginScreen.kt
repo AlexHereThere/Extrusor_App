@@ -1,9 +1,9 @@
 package com.example.extrusor_interfaz_grafica
 
+import BluetoothViewModel
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +19,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,8 +29,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.extrusor_interfaz_grafica.componentes.TopBar
-import com.example.extrusor_interfaz_grafica.core.navigation.Login
-import com.example.extrusor_interfaz_grafica.ui.theme.azulito
 import com.example.extrusor_interfaz_grafica.popUp.Conectando
 import com.example.extrusor_interfaz_grafica.ui.theme.azulito
 
@@ -37,7 +36,13 @@ import com.example.extrusor_interfaz_grafica.ui.theme.azulito
 @SuppressLint("MissingPermission")
 @Composable
 fun LoginScreen(viewModel: BluetoothViewModel, navigateToHome: () -> Unit,navigateToLogin: () -> Unit) {
-    viewModel.disconnect() //desconectarse para poder conectarse de nuevo.
+
+    LaunchedEffect(Unit) {
+        if (viewModel.isConnected.value) {
+            viewModel.disconnect()
+        }
+    }
+
     var pairedDevices = viewModel.pairedDevices
     var popUp = remember { mutableStateOf(false) }
     Conectando(showPopup = popUp.value, onDismiss = {
@@ -57,17 +62,17 @@ fun LoginScreen(viewModel: BluetoothViewModel, navigateToHome: () -> Unit,naviga
             ListaDeBluetooh(
                 listaDeBluetooth = pairedDevices,
                 navigateToHome = { dispositivo ->
-                    //viewModel.connectToDevice(
-                       // dispositivo,
-                        //onSuccess = {
+                    viewModel.connectToDevice(
+                        dispositivo,
+                        onSuccess = {
                             popUp.value = true
                             navigateToHome()
-                        //},
-                        //onFailure = { e ->
-                        //   Log.e("Bluetooth", "No se pudo conectar: ${e.message}")
-                        //    // Puedes mostrar un Toast o un mensaje de error aquí
-                        //}
-                    //)
+                        },
+                        onFailure = { e ->
+                           Log.e("Bluetooth", "No se pudo conectar: ${e.message}")
+                            // Puedes mostrar un Toast o un mensaje de error aquí
+                        }
+                     )
                 }
             )
         }
