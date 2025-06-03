@@ -1,6 +1,7 @@
 package com.example.extrusor_interfaz_grafica
 
 
+import BluetoothViewModel
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

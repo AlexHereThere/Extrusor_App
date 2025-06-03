@@ -1,5 +1,6 @@
 package com.example.extrusor_interfaz_grafica.core.navigation
 
+import BluetoothViewModel
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -9,7 +10,7 @@ import com.example.extrusor_interfaz_grafica.DetailScreen
 import com.example.extrusor_interfaz_grafica.LoginScreen
 import com.example.extrusor_interfaz_grafica.HomeScreen
 import com.example.extrusor_interfaz_grafica.WaitingScreen
-import com.example.extrusor_interfaz_grafica.BluetoothViewModel
+
 
 @Composable
 fun NavigationWrapper(viewModel: BluetoothViewModel) {

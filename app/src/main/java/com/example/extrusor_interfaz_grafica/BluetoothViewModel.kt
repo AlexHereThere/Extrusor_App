@@ -1,23 +1,27 @@
-package com.example.extrusor_interfaz_grafica
-
 import android.Manifest
-import android.app.Application
 import android.bluetooth.BluetoothDevice
 import androidx.annotation.RequiresPermission
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
+import android.app.Application
+import android.os.Handler
+import android.os.Looper
 import com.example.extrusor_interfaz_grafica.logica.BluetoothConnectionService
 import com.example.extrusor_interfaz_grafica.logica.BluetoothHelper
 
+
 class BluetoothViewModel(application: Application) : AndroidViewModel(application) {
+
     val bluetoothHelper = BluetoothHelper(application.applicationContext)
-    private var connectionService: BluetoothConnectionService? = null
-    private var receivedMessage by mutableStateOf("")
+
+    val lastReceivedMessage = mutableStateOf("")
     val pairedDevices = bluetoothHelper.pairedDevices
     val discoveredDevices = bluetoothHelper.discoveredDevices
-    var connection: BluetoothConnectionService? = null
+    val currentTemperature = mutableStateOf("0")
+    val isConnected = mutableStateOf(false)
+
+    private var connectionService: BluetoothConnectionService? = null
+
     @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
     fun startScan() {
         bluetoothHelper.startScanDiscovery()
@@ -36,23 +40,59 @@ class BluetoothViewModel(application: Application) : AndroidViewModel(applicatio
         bluetoothHelper.unregisterReceivers()
     }
 
-    fun connectToDevice(device: BluetoothDevice, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-        connection = BluetoothConnectionService(device,getApplication<Application>().applicationContext)
+    fun connectToDevice(
+        device: BluetoothDevice,
+        onSuccess: () -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        // Cerrar conexión previa si existe
+        connectionService?.close()
 
-        connection?.onConnected = {
-            connectionService = connection
-            onSuccess()
+        connectionService = BluetoothConnectionService(device, getApplication<Application>().applicationContext)
+        connectionService?.apply {
+            onConnected = {
+                Handler(Looper.getMainLooper()).post {
+                    isConnected.value = true
+                    onSuccess()
+                }
+            }
+            onConnectionFailed = { e ->
+                Handler(Looper.getMainLooper()).post {
+                    isConnected.value = false
+                    onFailure(e)
+                }
+            }
+            onDisconnected = {
+                Handler(Looper.getMainLooper()).post {
+                    isConnected.value = false
+                }
+            }
+            onMessageReceived = { message ->
+                onBluetoothDataReceived(message)
+            }
+            connect()
         }
-
-        connection?.onConnectionFailed = { e ->
-            onFailure(e)
-        }
-
-        connection?.connect()
     }
 
-    fun disconnect()
-    {
-        connection?.close()
+    fun disconnect() {
+        connectionService?.close()
+        Handler(Looper.getMainLooper()).post {
+            isConnected.value = false
+        }
+    }
+
+    private fun onBluetoothDataReceived(data: String) {
+        Handler(Looper.getMainLooper()).post {
+            currentTemperature.value = data.trim()
+            lastReceivedMessage.value = data.trim()
+        }
+    }
+
+    fun sendMessage(message: String) {
+        if (isConnected.value) {
+            connectionService?.sendMessage(message)
+        } else {
+            android.util.Log.e("BluetoothViewModel", "No se puede enviar: conexión no lista")
+        }
     }
 }

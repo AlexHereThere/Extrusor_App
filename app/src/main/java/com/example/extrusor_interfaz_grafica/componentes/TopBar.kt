@@ -1,5 +1,6 @@
 package com.example.extrusor_interfaz_grafica.componentes
 
+import BluetoothViewModel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,9 +18,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.extrusor_interfaz_grafica.BluetoothViewModel
 
 @Composable
 fun TopBar( mostrarSalida : Boolean, navigationToLogin :() -> Unit,viewModel: BluetoothViewModel) {

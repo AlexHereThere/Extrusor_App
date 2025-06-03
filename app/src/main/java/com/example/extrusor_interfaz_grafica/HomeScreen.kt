@@ -1,6 +1,7 @@
 package com.example.extrusor_interfaz_grafica
 
-
+import BluetoothViewModel
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -15,15 +16,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,14 +38,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.AlignmentLine
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
@@ -61,7 +62,6 @@ fun HomeScreen(
     navigateToWaiting: () -> Unit,
     navigateToLogin: () -> Unit,
 ) {
-    var text by remember { mutableStateOf("") }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -69,100 +69,112 @@ fun HomeScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         TopBar(true, viewModel = viewModel, navigationToLogin = { navigateToLogin() })
-        /*
-            Contenido Epico
-         */
 
-        //Prueba de reloj
-        Surface(modifier = Modifier.fillMaxSize()) {
-            Box(contentAlignment = Alignment.Center){
-                RelojDeCarga(
-                    totalTime = 100,
-                    handleColor = Color.Green,
-                    inactiveBarColor = Color.Cyan,
-                    activeBar = Color.Yellow,
-                    modifer = Modifier.size(200.dp),
-                )
-
-            }
-        }
-    //Quitado para probar el reloj
-    //FormularioYContenido()
+    FormularioYContenido(viewModel)
     }
 
 
 }
-//Aqui se va a enviar por bluetooh, es decir aqui hay como un formulario, lo que esta aqui es
-// Text field para que se pueda leer esto
 
-//No me parece correcto que tengamos un componente formulario y contenido
-//Para mostrarlo creo que deberia ser mejor algo asi
-/*
-*  If(RespuestaBluetooth == "EstoyCalentando"){
-*   mostrarContenidoDeMoitoreio(); //Waiting Screen
-* }else{
-*   mostrarFormulario(); //HomeScreen
-* }
-*
-* */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FormularioYContenido() {
-    var temperatura by remember { mutableStateOf("") }
-    var tiempo by remember { mutableStateOf("") }
+fun FormularioYContenido(viewModel: BluetoothViewModel) {
+    var temperatura by remember { mutableStateOf("100") }
+    var tiempoMinutos by remember { mutableStateOf("10") }
     var tempActual by remember { mutableStateOf("0") }
-    var tiempoActual by remember { mutableStateOf("0:0:0") }
-    var screenState by remember { mutableIntStateOf(0) } // si no viene de fuera
+    var screenState by remember { mutableIntStateOf(0) }
+
+
+    // Timer control
+    val tiempoEnSegundos = (tiempoMinutos.toLongOrNull() ?: 1L) * 60
+    var currentTime by remember { mutableLongStateOf(0L) }
+    var isTimerRunning by remember { mutableStateOf(false) }
+
     val textoBoton = when (screenState) {
         0 -> "Listo"
         1 -> "Empezar"
         else -> "Detener"
     }
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("Ingresar parámetros al extractor PET")
-        CustomtextField(
-            value = temperatura,
-            onValueChange = { if (it.length < 4) temperatura = it },
-            label = "Temperatura (C)"
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        CustomtextField(
-            value = tiempo,
-            onValueChange = { if (it.length < 4) tiempo = it },
-            label = "Tiempo (Minutos)"
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        if (screenState == 1) {
-            Button(
-                onClick = {},
-                modifier = Modifier.fillMaxWidth(0.8f)
+    LaunchedEffect(screenState) {
+        if(screenState == 2)
+        {
+           updateArduino(
+                viewModel = viewModel,
+                tempRef = temperatura,
+                timeSeg = tiempoEnSegundos.toString(),
+                startMove = "1", // mover el motor
+                startTimer = "1" // el temporizador ha empezado
+           )
+        }
+        else{
+            currentTime = tiempoEnSegundos
+            updateArduino(
+                viewModel = viewModel,
+                tempRef = temperatura,
+                timeSeg = tiempoEnSegundos.toString(),
+                startMove = "0", // no quieres mover el motor todavía
+                startTimer = "0" // el temporizador aún no ha empezado
+            )
+        }
 
-            ) { Text("Cambiar") }
+    }
+
+    Column(modifier = Modifier.padding(16.dp)) {
+        if (screenState == 0) {
+            // Formulario
+            Text("Ingresar parámetros al extractor PET")
+            CustomtextField(
+                value = temperatura,
+                onValueChange = { if (it.length < 4) temperatura = it },
+                label = "Temperatura (C)"
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            CustomtextField(
+                value = tiempoMinutos,
+                onValueChange = { if (it.length < 4) tiempoMinutos = it },
+                label = "Tiempo (Minutos)"
+            )
+        } else {
+
+            // Pantalla de monitoreo con reloj
+            tempActual = viewModel.currentTemperature.value
+            Text("Temperatura Actual")
+            TextField(value = tempActual, onValueChange = {}, readOnly = true)
+            Text("Temperatura Deseada")
+            TextField(value = temperatura, onValueChange = {}, readOnly = true)
+            if(screenState==1)
+            {
+                Text( modifier = Modifier.fillMaxWidth(0.8F), text = "Espere hasta llegar a temperatura deseada.")
+            }else if(screenState==2)
+            {
+                Text( modifier = Modifier.fillMaxWidth(0.8F), text = "Hay que esperar...")
+            }
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(0.8F)
+                    .fillMaxHeight(0.7F)
+                    .padding(horizontal = 5.dp, vertical = 5.dp),
+                color = Color.Transparent
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    RelojDeCarga(
+                        totalTime = tiempoEnSegundos,
+                        handleColor = Color.Green,
+                        inactiveBarColor = Color.DarkGray,
+                        activeBar = Color.Red,
+                        isTimerRunning = isTimerRunning,
+                        currentTime = currentTime,
+                        onTick = { currentTime = it },
+                        onFinished = {
+                            isTimerRunning = false
+                        }
+                    )
+                }
+            }
         }
     }
 
-
-    Column(
-        modifier = Modifier
-            .fillMaxHeight(0.50F),
-        verticalArrangement = Arrangement.Top
-    ) {
-        Text(
-            fontSize = 20.sp,
-            text = "Temperatura: $tempActual",
-
-            )
-        Spacer(Modifier.height(12.dp))
-        Text(
-            fontSize = 20.sp,
-            text = "Tiempo: $tiempoActual",
-
-            )
-
-       GifView(R.drawable.engranaje_gif, modifier = Modifier)
-    }
-
-    //boton inferior
     Column(
         modifier = Modifier
             .padding(32.dp)
@@ -173,13 +185,22 @@ fun FormularioYContenido() {
         Button(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                screenState = if (screenState < 2) screenState + 1 else 0
+                when (screenState) {
+                    0 -> screenState = 1 // Avanza al estado "Empezar"
+                    1 -> {
+                        // Inicia el timer
+                        isTimerRunning = true
+                        screenState = 2
+                    }
+                    2 -> {
+                        isTimerRunning = false
+                        screenState = 0
+                        currentTime = tiempoEnSegundos // ✅ Reinicia correctamente
+                    }
+                }
             }
         ) {
-            AnimatedContent(
-                targetState = textoBoton,
-                label = "Button Text Animation"
-            ) { text ->
+            AnimatedContent(targetState = textoBoton, label = "Botón animado") { text ->
                 Text(text = text)
             }
         }
@@ -195,9 +216,16 @@ fun CustomtextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label) },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        label = { Text(text = label,
+            color = Color.Black) },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        colors = TextFieldDefaults.colors(
+            focusedTextColor = Color.Black,
+        unfocusedTextColor = Color.Black,
+        focusedContainerColor = Color.White,
+        unfocusedContainerColor = Color.White
     )
+        )
 }
 
 
@@ -225,9 +253,7 @@ fun GifView(resourceId: Int, modifier: Modifier = Modifier) {
 
 }
 
-
-
-
+@SuppressLint("DefaultLocale")
 @Composable
 fun RelojDeCarga(
     totalTime: Long,
@@ -235,31 +261,30 @@ fun RelojDeCarga(
     inactiveBarColor: Color,
     activeBar: Color,
     modifer: Modifier = Modifier,
-    initialValue: Float = 0f,
     strokeWidth: Dp = 5.dp,
+    isTimerRunning: Boolean,
+    currentTime: Long,
+    onTick: (Long) -> Unit,
+    onFinished: () -> Unit
 ) {
-
     var size by remember { mutableStateOf(IntSize.Zero) }
-    var value by remember { mutableStateOf(initialValue) }
-    var currentTime by remember { mutableStateOf(totalTime) }
-    var isTimerRunning by remember { mutableStateOf(false) }
+    var value by remember { mutableFloatStateOf(1f) }
 
-    //Cuando cambie alguna de las key se hara lo de adentro
-    LaunchedEffect(key1 = currentTime, key2 = isTimerRunning ) {
-        if (currentTime > 0 && isTimerRunning) {
-            delay(100L) //100 milisegundos
-            currentTime -= 100L
-            value = currentTime / totalTime.toFloat()
+    LaunchedEffect(key1 = currentTime, key2 = totalTime) {
+        value = (currentTime.toFloat() / totalTime).coerceIn(0f, 1f)
+    }
+
+    LaunchedEffect(key1 = isTimerRunning, key2 = currentTime) {
+        if (isTimerRunning && currentTime > 0L) {
+            delay(1000L)
+            onTick(currentTime - 1)
+        }
+        if (isTimerRunning && currentTime <= 0L) {
+            onFinished()
         }
     }
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .onSizeChanged {
-                size = it
-            }
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.onSizeChanged { size = it }) {
+        Canvas(modifier = Modifier.size(250.dp)) {
             drawArc(
                 color = inactiveBarColor,
                 startAngle = -215f,
@@ -279,82 +304,46 @@ fun RelojDeCarga(
                 style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
 
             )
-            val center = Offset(size.width / 2f, size.height / 2f);
-            val beta = ((250f * value) + 145f) * (PI / 180f).toFloat()
-            val r = size.width / 2
-            val a = cos(beta) * r
-            val b = sin(beta) * r
+            val center = Offset(size.width / 2f, size.height / 2f)
+            val radius = size.width / 2f
+
+            val sweep = 250f
+            val startAngle = -215f
+            val angle = startAngle + (sweep * value) // NOTA: 1 - value para invertir
+            val beta = angle * (PI / 180f).toFloat()
+
+            val a = cos(beta) * radius
+            val b = sin(beta) * radius
 
             drawPoints(
                 listOf(Offset(center.x + a, center.y + b)),
-
                 pointMode = PointMode.Points,
                 color = handleColor,
                 strokeWidth = (strokeWidth * 3f).toPx(),
                 cap = StrokeCap.Round
             )
         }
+        val minutes = (currentTime / 1L) / 60
+        val seconds = (currentTime / 1L) % 60
+        val formattedTime = String.format("%02d:%02d", minutes, seconds)
         Text(
-            text = (currentTime / 1000L).toString(),
+
+
+            text = formattedTime,
             fontSize = 44.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = Color.Black
         )
-        Button(
-            onClick = {
-                if (currentTime <= 0L) {
-                    currentTime = totalTime
-                    isTimerRunning = true
-                } else {
-                    isTimerRunning = !isTimerRunning
-                }
-    },
-    modifier = Modifier.align(Alignment.BottomCenter),
-    colors = ButtonDefaults.buttonColors(
-        containerColor = if (isTimerRunning || currentTime <= 0L) {
-            Color.Green
-        } else {
-            Color.Red
-        }
-    ),
-    enabled = TODO(),
-    shape = TODO(),
-    elevation = TODO(),
-    border = TODO(),
-    contentPadding = TODO(),
-    interactionSource = TODO(),
-    content = TODO()
-    )
-    Text(
-        text = if (isTimerRunning && currentTime >= 0L) "stop"
-        else if (!isTimerRunning && currentTime >= 0L) "start"
-        else "Restart"
-    )
+    }
 }
+
+fun updateArduino(viewModel: BluetoothViewModel, tempRef: String,timeSeg: String,startMove: String,startTimer: String)
+{
+    val minutes = (timeSeg.toInt() / 1L) / 60
+    val seconds = (timeSeg.toInt() / 1L) % 60
+    val str = "$tempRef,$minutes,$seconds,$startMove,$startTimer"
+    viewModel.sendMessage(str)
 }
 
 
-//Metodo Debug para mostrar el reloj que estoy haciendo
-@Composable
-@Preview
-fun mostrarReloj() {
-
-}
-
-
-/*
-        NavBar()
-        Spacer(modifier = Modifier.weight(1f))
-    }*/
-
-/*
-            Spacer(modifier = Modifier.weight(1f))
-        Text("Hola soy el home", fontSize = 30.sp)
-        Spacer(modifier = Modifier.weight(1f))
-        TextField(value = text, onValueChange = { text = it })
-        Spacer(modifier = Modifier.weight(1f))
-        Button(onClick = { navigationToDetail(text) }) {
-            Text("Navegar al Login")
-        }
-         */
 
